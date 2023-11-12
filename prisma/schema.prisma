@@ -12,6 +12,51 @@ datasource db {
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
-  name String
+  id             String          @id @default(uuid())
+  name           String
+  age            Int
+  email          String          @unique
+  role           Role            @default(BASIC)
+  isAdmin        Boolean
+  writtenPosts   Post[]          @relation("writtenPosts")
+  favoritePosts  Post[]          @relation("favoritePosts")
+  userPreference UserPreference?
+
+  @@unique([age, name], name: "age_name")
+  @@index([email], name: "email")
+}
+
+model UserPreference {
+  id           String  @id @default(uuid())
+  emailUpdates Boolean
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String  @unique
+}
+
+model Post {
+  id            String     @id @default(uuid())
+  title         String
+  averageRating Float
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  author        User       @relation("writtenPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId      String
+  favoritedBy   User?      @relation("favoritePosts", fields: [favoritedById], references: [id], onDelete: Cascade)
+  favoritedById String?
+  categories    Category[]
+
+  @@index([authorId], name: "authorId")
+  @@index([favoritedById], name: "favoritedById")
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  EDITOR
+  ADMIN
 }
